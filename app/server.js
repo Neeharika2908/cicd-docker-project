@@ -6,6 +6,14 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/api/status", (req, res) => {
+  res.json({
+    status: "ok",
+    buildNumber: process.env.BUILD_NUMBER || "local",
+    githubSha: process.env.GITHUB_SHA || "unknown"
+  });
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });

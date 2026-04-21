@@ -36,30 +36,27 @@ jobs:
         docker push ${{ env.DOCKER_IMAGE }}:latest
         
     - name: 🚀 Deploy to EC2
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v0.1.10
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ env.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # Stop old container
           docker stop cicd-container || true
           docker rm cicd-container || true
           
-          # Pull latest image
           docker pull ${{ env.DOCKER_IMAGE }}:latest
           
-          # Run new container
           docker run -d \
             --name cicd-container \
             -p 3000:3000 \
             -e BUILD_NUMBER=${{ github.run_number }} \
+            -e GITHUB_SHA=${{ github.sha }} \
             --restart unless-stopped \
             ${{ env.DOCKER_IMAGE }}:latest
-            
-          # Verify
-          sleep 5
-          echo "Deployment done"
+
+          docker ps
+          docker image prune -f
           
     - name: ✅ Deployment Success
       if: success()
