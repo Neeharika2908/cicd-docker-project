@@ -42,30 +42,21 @@ jobs:
         username: ${{ env.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # Stop and remove old container
           docker stop cicd-container || true
           docker rm cicd-container || true
 
-          # Remove old image first
-          docker rmi ${{ env.DOCKER_IMAGE }}:latest || true
+          docker pull ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
 
-          # Pull fresh image
-          docker pull ${{ env.DOCKER_IMAGE }}:latest
-
-          # Run new container
           docker run -d \
             --name cicd-container \
             -p 3000:3000 \
             -e BUILD_NUMBER=${{ github.run_number }} \
             -e GITHUB_SHA=${{ github.sha }} \
             --restart unless-stopped \
-            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
 
-          # Debug info
           docker ps
           docker logs cicd-container || true
-
-          # Cleanup
           docker image prune -f
 
     - name: ✅ Deployment Success
