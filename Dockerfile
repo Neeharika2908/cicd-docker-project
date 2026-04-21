@@ -1,5 +1,5 @@
 # Use Node base
-FROM node:18
+FROM node:20
 
 # Set working dir
 WORKDIR /app
