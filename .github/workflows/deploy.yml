@@ -14,27 +14,27 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 📥 Checkout Code
-      uses: actions/checkout@v3
-      
+      uses: actions/checkout@v4
+
     - name: 🔐 Login to Docker Hub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        
-    - name: 🔨 Build Docker Image
+
+    - name: 🔨 Build Docker Image (no cache)
       run: |
-        docker build -t ${{ env.DOCKER_IMAGE }}:${{ github.run_number }} .
+        docker build --no-cache -t ${{ env.DOCKER_IMAGE }}:${{ github.run_number }} .
         docker tag ${{ env.DOCKER_IMAGE }}:${{ github.run_number }} ${{ env.DOCKER_IMAGE }}:latest
-        
+
     - name: 📤 Push to Docker Hub
       run: |
         docker push ${{ env.DOCKER_IMAGE }}:${{ github.run_number }}
         docker push ${{ env.DOCKER_IMAGE }}:latest
-        
+
     - name: 🚀 Deploy to EC2
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -42,11 +42,17 @@ jobs:
         username: ${{ env.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          # Stop and remove old container
           docker stop cicd-container || true
           docker rm cicd-container || true
-          
+
+          # Remove old image first
+          docker rmi ${{ env.DOCKER_IMAGE }}:latest || true
+
+          # Pull fresh image
           docker pull ${{ env.DOCKER_IMAGE }}:latest
-          
+
+          # Run new container
           docker run -d \
             --name cicd-container \
             -p 3000:3000 \
@@ -55,13 +61,17 @@ jobs:
             --restart unless-stopped \
             ${{ env.DOCKER_IMAGE }}:latest
 
+          # Debug info
           docker ps
+          docker logs cicd-container || true
+
+          # Cleanup
           docker image prune -f
-          
+
     - name: ✅ Deployment Success
       if: success()
       run: echo "🎉 Deployment successful!"
-      
+
     - name: ❌ Deployment Failed
       if: failure()
       run: echo "💥 Deployment failed!"
