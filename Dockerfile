@@ -1,13 +1,23 @@
-FROM node:18-alpine
+# Use Node base
+FROM node:18
 
-WORKDIR /usr/src/app
+# Set working dir
+WORKDIR /app
 
-COPY app/package*.json ./
+# Copy everything
+COPY . .
 
-RUN npm install
+# Install backend deps
+RUN cd app && npm install
 
-COPY app/ .
+# Build frontend
+RUN cd frontend && npm install && npm run build
 
+# Move frontend build to backend
+RUN cp -r frontend/dist app/public
+
+# Expose port
 EXPOSE 3000
 
-CMD [ "npm", "start" ]
+# Start server
+CMD ["node", "app/server.js"]
