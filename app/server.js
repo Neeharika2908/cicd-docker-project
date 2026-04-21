@@ -22,7 +22,6 @@ app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🌐 Visit: http://localhost:${PORT}`);
 });
-const path = require("path");
 
 // Serve frontend
 app.use(express.static(path.join(__dirname, "public")));
