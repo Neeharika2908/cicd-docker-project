@@ -2,14 +2,22 @@ FROM node:20
 
 WORKDIR /app
 
+# Copy everything
 COPY . .
 
-# install backend deps
-RUN cd app && npm install
+# Install backend dependencies
+WORKDIR /app/app
+RUN npm install
 
-# build frontend
-RUN cd frontend && npm install && npm run build
+# Build frontend
+WORKDIR /app/frontend
+RUN npm install && npm run build
 
+# Go back to root
+WORKDIR /app
+
+# Expose port
 EXPOSE 3000
 
+# Start server
 CMD ["node", "app/server.js"]
