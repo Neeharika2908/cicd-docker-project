@@ -2,12 +2,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 env:
-  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/cicd-app
+  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/cicd-docker-project
   EC2_HOST: ${{ secrets.EC2_HOST }}
   EC2_USER: ubuntu
 
